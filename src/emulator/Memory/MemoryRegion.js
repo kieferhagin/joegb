@@ -17,11 +17,11 @@ class MemoryRegion {
     constructor (sizeInBytes, offsetMask, data=null) {
         if (!data) {
             this._data = new Array(sizeInBytes);
+            this._data.fill(0);
         } else {
             this._originalData = data;
+            this._data = this._originalData.slice();
         }
-
-        this.reset();
 
         this._offsetMask = offsetMask;
     }

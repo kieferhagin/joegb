@@ -23,15 +23,7 @@ class CPU {
         this._memory.reset();
     }
 
-    start () {
-        // setInterval(() => {
-        while (!this._stop) {
-            this._step();
-        }
-        // }, 1);
-    }
-
-    _step () {
+    step () {
         let nextOperation = () => {};
 
         try {
@@ -45,6 +37,8 @@ class CPU {
 
         this._registers.maskProgramCounter();
         this._clock.tick(clockTicks);
+
+        return nextOperation;
     }
 
     _getNextOperation () {

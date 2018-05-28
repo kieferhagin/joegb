@@ -1,6 +1,7 @@
 const chai = require('chai');
 const spies = require('chai-spies');
 const GPU = require('../../GPU/GPU.js').default;
+const MemoryUnit = require('../../Memory/MemoryUnit').default;
 
 chai.use(spies);
 
@@ -11,7 +12,15 @@ let gpu = null;
 
 describe('GPU', () => {
     beforeEach (() => {
-        gpu = new GPU();
+        gpu = new GPU(new MemoryUnit());
+    });
+
+    describe('construct', () => {
+        it('should set memory unit', () => {
+            const m = new MemoryUnit();
+            gpu = new GPU(m);
+            expect(gpu._memory).to.be.equal(m);
+        });
     });
 
     describe('reset', () => {
@@ -27,10 +36,10 @@ describe('GPU', () => {
             spy.should.have.been.called();
         });
 
-        it('should set current line to 0', () => {
-            gpu._currentLine = 5;
+        it('should reset screen', () => {
+            let spy = chai.spy.on(gpu._screen, 'reset');
             gpu.reset();
-            expect(gpu._currentLine).to.be.equal(0);
+            spy.should.have.been.called();
         });
     });
 
@@ -85,13 +94,13 @@ describe('GPU', () => {
             gpu._clock.tick(50);
             gpu._horizontalBlank();
 
-            expect(gpu._currentLine).to.be.equal(0);
+            expect(gpu._memory._gpuRegisters._currentScanLine).to.be.equal(0);
         });
 
         it('should increase line number by one', () => {
             gpu._horizontalBlank();
 
-            expect(gpu._currentLine).to.be.equal(1);
+            expect(gpu._memory._gpuRegisters._currentScanLine).to.be.equal(1);
         });
 
         it('should reset clock', () => {
@@ -107,7 +116,7 @@ describe('GPU', () => {
 
         describe('horizontal blank complete', () => {
             beforeEach(() => {
-                gpu._currentLine = 143;
+                gpu._memory._gpuRegisters._currentScanLine= 143;
             });
 
             it('should switch to vertical blank mode', () => {
@@ -117,7 +126,7 @@ describe('GPU', () => {
 
             it('should not increase line number', () => {
                 gpu._horizontalBlank();
-                expect(gpu._currentLine).to.be.equal(143);
+                expect(gpu._memory._gpuRegisters._currentScanLine).to.be.equal(143);
             });
         });
     });
@@ -133,13 +142,13 @@ describe('GPU', () => {
             gpu._clock.tick(113);
             gpu._verticalBlank();
 
-            expect(gpu._currentLine).to.be.equal(0);
+            expect(gpu._memory._gpuRegisters._currentScanLine).to.be.equal(0);
         });
 
         it('should increase line number by one', () => {
             gpu._verticalBlank();
 
-            expect(gpu._currentLine).to.be.equal(1);
+            expect(gpu._memory._gpuRegisters._currentScanLine).to.be.equal(1);
         });
 
         it('should reset clock', () => {
@@ -150,7 +159,7 @@ describe('GPU', () => {
 
         describe('horizontal blank complete', () => {
             beforeEach(() => {
-                gpu._currentLine = 153;
+                gpu._memory._gpuRegisters._currentScanLine = 153;
             });
 
             it('should switch to OAM read mode', () => {
@@ -160,7 +169,7 @@ describe('GPU', () => {
 
             it('should reset line number', () => {
                 gpu._verticalBlank();
-                expect(gpu._currentLine).to.be.equal(0);
+                expect(gpu._memory._gpuRegisters._currentScanLine).to.be.equal(0);
             });
         });
     });
@@ -214,6 +223,24 @@ describe('GPU', () => {
         it('should switch to horizontal blank mode', () => {
             gpu._vramRead();
             expect(gpu._mode).to.be.equal(GPU.MODES.HORIZONTAL_BLANK);
+        });
+
+        it('should render scan line', () => {
+            let spy = chai.spy.on(gpu, '_renderScanLine');
+            gpu._vramRead();
+            spy.should.have.been.called();
+        });
+    });
+
+    describe('render scan line', () => {
+        it('should do nothing if display is disabled', () => {
+            gpu._memory._gpuRegisters._displayEnabled = false;
+
+            let spy = chai.spy.on(gpu._memory._gpuRegisters, 'getTileY');
+
+            gpu._renderScanLine();
+
+            spy.should.not.have.been.called();
         });
     });
 });

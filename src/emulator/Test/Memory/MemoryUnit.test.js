@@ -213,6 +213,10 @@ describe('MemoryUnit', () => {
 
             expect(output).to.be.equal(75);
         });
+
+        it('should read from gpu registers', () => {
+
+        });
     });
 
     describe('read word', () => {
@@ -248,6 +252,16 @@ describe('MemoryUnit', () => {
         it('should write byte to zero page RAM', () => {
             memoryUnit.writeByte(0xFF80, 75);
             expect(memoryUnit._zeroPageRAM.readByte(0xFF80)).to.be.equal(75);
+        });
+    });
+
+    describe('write word', () => {
+        it('should call write byte twice with correct values', () => {
+            let spy = chai.spy.on(memoryUnit, 'writeByte');
+            memoryUnit.writeWord(0xFF80, 400);
+
+            spy.should.have.been.called.with(1);
+            spy.should.have.been.called.with(144);
         });
     });
 });

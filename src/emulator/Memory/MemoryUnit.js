@@ -2,6 +2,7 @@ import MemoryRegion from './MemoryRegion.js';
 import MemoryBIOS from "./MemoryBIOS";
 import MemoryROM from "./MemoryROM";
 import MemoryVRAM from "./MemoryVRAM";
+import GPURegisters from "../GPU/GPURegisters";
 
 class MemoryUnit {
     _isInBIOS = true;
@@ -12,10 +13,10 @@ class MemoryUnit {
     _zeroPageRAM = new MemoryRegion(127, 0x7F);
     _videoRAM = new MemoryVRAM();
     _rom = null;
+    _gpuRegisters = new GPURegisters();
 
     constructor (rom=new MemoryROM(new Array(0xFFFF).fill(0))) {
         this._rom = rom;
-        this._videoRAM._data.fill(1);
     }
 
     reset () {
@@ -89,7 +90,7 @@ class MemoryUnit {
                             return 0;
                         }
 
-                        if (address > 0xFF7F) {
+                        if (address >= 0xFF80) {
                             return this._readByteZeroPageRAM(address);
                         }
 
@@ -120,8 +121,7 @@ class MemoryUnit {
                             case 0x50:
                             case 0x60:
                             case 0x70:
-                                debugger;
-                                return 0; // TODO: get GPU WORKING
+                                return this._gpuRegisters.readRegisters(address);
                         }
                 }
         }
@@ -236,8 +236,19 @@ class MemoryUnit {
                             return this._zeroPageRAM.writeByte(address, value);
                         }
 
-                        // TODO: inputs, GPU writes, timer writes
-                        debugger;
+                        switch (address & 0xF0) {
+                            case 0x00:
+                                return; // TODO: inputs, timer writes, interrupts
+                            case 0x10:
+                            case 0x20:
+                            case 0x30:
+                                break; // TODO: unused?
+                            case 0x40:
+                            case 0x50:
+                            case 0x60:
+                            case 0x70:
+                                this._gpuRegisters.writeRegisters(address, value);
+                        }
                 }
         }
     }
@@ -247,7 +258,8 @@ class MemoryUnit {
     }
 
     writeWord (address, value) {
-
+        this.writeByte(address, value & 255);
+        this.writeByte(address + 1, (value >> 8));
     }
 }
 

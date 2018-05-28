@@ -43,25 +43,25 @@ describe('CPU', () => {
 
         it('should get next operation', () => {
             let spy = chai.spy.on(cpu, '_getNextOperation');
-            cpu._step();
+            cpu.step();
             spy.should.have.been.called();
         });
 
         it('should increment program counter', () => {
             let spy = chai.spy.on(cpu._registers, 'incrementProgramCounter');
-            cpu._step();
+            cpu.step();
             spy.should.have.been.called();
         });
 
         it('should mask program counter', () => {
             let spy = chai.spy.on(cpu._registers, 'maskProgramCounter');
-            cpu._step();
+            cpu.step();
             spy.should.have.been.called();
         });
 
         it('should add instruction clock to CPU clock', () => {
             let spy = chai.spy.on(cpu._clock, 'tick');
-            cpu._step();
+            cpu.step();
             spy.should.have.been.called();
         });
     });

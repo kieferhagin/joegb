@@ -1,3 +1,4 @@
 node_modules
 *.gb
 .DS_STORE
+build
